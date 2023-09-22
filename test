@@ -1,0 +1,36 @@
+import groovy.json.JsonSlurper
+import groovyx.net.http.RESTClient
+
+// Define your Jira API endpoint and credentials
+def jiraUrl = "https://your-jira-instance.atlassian.net/rest/api/2/issue/ISSUE-123" // Replace with your issue URL
+def username = "your-jira-username"
+def password = "your-jira-api-token" // Use an API token or your Jira password
+
+// Create an HTTP client to interact with Jira
+def client = new RESTClient(jiraUrl)
+client.auth.basic(username, password)
+
+// Make a GET request to fetch the issue details
+def response = client.get()
+
+// Check if the request was successful
+if (response.status == 200) {
+// Parse the JSON response
+def jsonSlurper = new JsonSlurper()
+def issueDetails = jsonSlurper.parseText(response.text)
+
+// Check the status of the issue
+def issueStatus = issueDetails.fields.status.name
+
+if (issueStatus == "Open") {
+// The issue is open, return false and abort the pipeline
+return false
+} else {
+// The issue is not open, continue with the pipeline
+// You can add your pipeline logic here
+// ...
+}
+} else {
+// Handle the case where the request to Jira fails
+// You may want to log an error or take appropriate action
+}
