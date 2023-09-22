@@ -1,0 +1,122 @@
+import groovy.json.JsonSlurper
+
+
+// Define your Jira API endpoint and Jira ticket key
+def jiraEndpoint = "https://your-jira-instance.com/rest/api/2/issue/JIRA-TICKET-KEY"
+
+ 
+
+// Define your Jira credentials (username and API token)
+def jiraUsername = "B0299451"
+def jiraApiToken = "your-jira-api-token"
+
+ 
+
+// Define the variables lob, project, and isStaticUI with their appropriate values
+def lob = "AirtelWork"
+def project = "your-project-name" // Replace with the actual project name
+def isStaticUI = false
+
+ 
+
+// Function to check if a Jira ticket exists
+def checkJiraTicket() {
+    try {
+        def response = sh(script: """
+            curl -s -u ${jiraUsername}:${jiraApiToken} ${jiraEndpoint}
+        """, returnStatus: true, returnStdout: true)
+
+        if (response == 0) {
+            return true // Jira ticket exists
+        } else {
+            return false // Jira ticket does not exist
+        }
+    } catch (Exception e) {
+        return false // An error occurred, assume the Jira ticket does not exist
+    }
+}
+
+ 
+
+// Define the Jenkins pipeline stages
+pipeline {
+    agent any
+
+ 
+
+    stages {
+        stage('Initialize') {
+            steps {
+                echo "Initializing..."
+            }
+        }
+
+ 
+
+        stage('Preparation') {
+            when {
+                expression { lob == "AirtelWork" && project != "task-manager-service" && !isStaticUI }
+            }
+            steps {
+                echo "Preparing..."
+            }
+        }
+
+ 
+
+        stage('Check Jira Ticket') {
+            when {
+                expression { lob == "AirtelWork" && project != "task-manager-service" && !isStaticUI }
+            }
+            steps {
+                script {
+                    def hasJiraTicket = checkJiraTicket()
+
+                    if (hasJiraTicket) {
+                        error("A Jira ticket exists for this service. Aborting the pipeline.")
+                    } else {
+                        echo "No Jira ticket found. Proceeding with the pipeline."
+                    }
+                }
+            }
+        }
+
+ 
+
+        stage('Build') {
+            when {
+                expression { lob == "AirtelWork" && project != "user-manager-service" && !isStaticUI }
+            }
+            steps {
+                echo "Building..."
+            }
+        }
+
+ 
+
+        stage('Deploy') {
+            when {
+                expression { lob == "AirtelWork" && project != "task-manager-service" && !isStaticUI }
+            }
+            steps {
+                echo "Deploying..."
+            }
+        }
+
+ 
+
+        stage('Finalize') {
+            steps {
+                echo "Finalizing..."
+            }
+        }
+    }
+
+ 
+
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+    }
+}
