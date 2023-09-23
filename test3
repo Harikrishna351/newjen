@@ -1,0 +1,29 @@
+
+def jiraUrl = "https://your-jira-instance.atlassian.net/rest/api/2/issue/ISSUE-123" // Replace with your issue URL
+
+
+def response = httpRequest(
+    url: jiraUrl,
+    httpMode: 'GET',
+    ignoreSslErrors: true // You can remove this if your Jira instance has a valid SSL certificate
+)
+
+
+if (response.status == 200) {
+    def issueDetails = readJSON text: response.getContent()
+
+  
+    def issueStatus = issueDetails.fields.status.name
+
+    if (issueStatus == "Open") {
+ 
+        error("A Jira ticket is in 'Open' status. Aborting the pipeline.")
+    } else {
+    
+        echo "The Jira ticket is not in 'Open' status. Proceeding with the pipeline."
+  
+    }
+} else {
+    
+    error("Failed to fetch Jira issue details. Aborting the pipeline.")
+}
