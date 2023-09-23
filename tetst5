@@ -1,0 +1,26 @@
+
+def jiraBaseUrl = "https://jira.airtel.com" // Replace with your Jira base URL
+def issueKey = "ISSUE-123" // Replace with your Jira issue key
+
+
+def jiraUrl = "${jiraBaseUrl}/rest/api/2/issue/${issueKey}"
+
+def response = sh(script: "curl -s -k ${jiraUrl}", returnStatus: true, returnStdout: true)
+
+// Check if the request was successful
+if (response == 0) {
+    def issueDetails = readJSON text: response
+    def issueStatus = issueDetails.fields.status.name
+
+    if (issueStatus == "Open") {
+        // The issue is open, return false and abort the pipeline
+        error("A Jira ticket is in 'Open' status. Aborting the pipeline.")
+    } else {
+        // The issue is not open, continue with the pipeline
+        echo "The Jira ticket is not in 'Open' status. Proceeding with the pipeline."
+        // Add your pipeline logic here
+    }
+} else {
+    // Handle the case where the request to Jira fails
+    error("Failed to fetch Jira issue details. Aborting the pipeline.")
+}
